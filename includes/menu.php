@@ -42,6 +42,15 @@ function isAdmin() {
 </li>
 <?php endif; ?>
 
+<?php if ($_SESSION['user']['perfil'] === 'admin'): ?>
+<li class="nav-item">
+<a class="nav-link" href="index.php?bb=users_listar">
+<i class="typcn typcn-user-add-outline menu-icon"></i>
+<span class="menu-title">Utilizadores</span>
+</a>
+</li>
+<?php endif; ?>
+
 <!-- LOGOUT -->
 <li class="nav-item">
 <a class="nav-link" href="logout.php">

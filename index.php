@@ -52,6 +52,23 @@ switch ($bb) {
                 include __DIR__ . "/pages/trabalhadores_excluir.php";
                 break;
 
+
+            case 'users_listar':
+                include __DIR__ . "/pages/users_listar.php";
+                break;
+
+            case 'users_novo':
+                include __DIR__ . "/pages/users_novo.php";
+                break;
+
+            case 'users_editar':
+                include __DIR__ . "/pages/users_editar.php";
+                break;
+
+            case 'users_excluir':
+                include __DIR__ . "/pages/users_excluir.php";
+                break;
+
             default:
                 include __DIR__ . "/pages/404.php";
                 break;

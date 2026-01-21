@@ -1,6 +1,9 @@
 <?php
 require __DIR__ . "/config.php";
-if (session_status() === PHP_SESSION_NONE) session_start();
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $erro = '';
 $email = '';
@@ -19,27 +22,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erro = "Credenciais inválidas.";
     } else {
         $_SESSION['user'] = [
-            'id' => (int)$u['id'],
-            'nome' => $u['nome'],
-            'email' => $u['email'],
+            'id'     => (int)$u['id'],
+            'nome'   => $u['nome'],
+            'email'  => $u['email'],
             'perfil' => $u['perfil'],
         ];
+
         header("Location: index.php?bb=home");
         exit;
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Login - Gestão de Alunos</title>
+<title>Login | Gestão de Residentes</title>
 
 <link rel="stylesheet" href="vendors/typicons.font/font/typicons.css">
 <link rel="stylesheet" href="vendors/css/vendor.bundle.base.css">
 <link rel="stylesheet" href="css/vertical-layout-light/style.css">
-<link rel="shortcut icon" href="images/favicon.png">
+<link rel="shortcut icon" href="images/favicon.png" />
 </head>
 
 <body>
@@ -50,48 +55,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="col-lg-4 mx-auto">
 
 <div class="auth-form-light text-left py-5 px-4 px-sm-5">
-<div class="brand-logo">
+
+<div class="brand-logo text-center">
 <img src="images/logo.svg" alt="logo">
 </div>
 
 <h4>Entrar</h4>
-<h6 class="font-weight-light">Use as credenciais fornecidas.</h6>
+<h6 class="font-weight-light">Use as suas credenciais.</h6>
 
 <?php if ($erro): ?>
-<div class="alert alert-danger">
-<?= htmlspecialchars($erro) ?>
-</div>
+<div class="alert alert-danger"><?= htmlspecialchars($erro) ?></div>
 <?php endif; ?>
 
 <form class="pt-3" method="post">
 
 <div class="form-group">
-<input
-type="email"
+<input type="email"
 class="form-control form-control-lg"
 name="email"
 placeholder="Email"
-value="<?= htmlspecialchars($email) ?>"
-required
->
+value="<?= htmlspecialchars($email) ?>">
 </div>
 
 <div class="form-group">
-<input
-type="password"
+<input type="password"
 class="form-control form-control-lg"
 name="senha"
-placeholder="Palavra-passe"
-required
->
+placeholder="Palavra-passe">
 </div>
 
 <div class="mt-3">
-<button
-class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn"
-type="submit">
+<button type="submit"
+class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">
 ENTRAR
 </button>
+</div>
+
+<!-- SIGN UP LINK -->
+<div class="text-center mt-4 font-weight-light">
+Não tem conta?
+<a href="signup.php" class="text-primary">Criar conta</a>
 </div>
 
 </form>
@@ -107,4 +110,5 @@ ENTRAR
 <script src="js/template.js"></script>
 </body>
 </html>
+
 
