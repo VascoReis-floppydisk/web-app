@@ -1,30 +1,27 @@
 <?php
 require __DIR__ . "/../includes/auth.php";
-require __DIR__ . "/../includes/permissions.php";
+
+$perfil = $_SESSION['user']['perfil'] ?? 'user';
 ?>
 
-<h3>Dashboard</h3>
-<p>Bem-vindo ao sistema de Gestão de Residentes.</p>
+<h3 class="mb-3">Dashboard</h3>
+<p class="mb-4 text-muted">Bem-vindo ao sistema de Gestão de Residentes.</p>
 
 <div class="row">
 
-<!-- RESIDENTES CARD -->
+<!-- RESIDENTES -->
 <div class="col-md-6 grid-margin stretch-card">
-<div class="card">
-<div class="card-body">
+<div class="card h-100 border-primary">
+<div class="card-body d-flex flex-column">
+<h4 class="card-title text-primary">Residentes</h4>
 
-<h4 class="card-title">Residentes</h4>
-<p class="card-description">
-Consultar os residentes do sistema.
-</p>
-
-<a class="btn btn-primary"
+<a class="btn btn-outline-primary mb-2"
 href="index.php?bb=residentes_listar">
 Ver Residentes
 </a>
 
-<?php if (is_admin()): ?>
-<a class="btn btn-success ml-2"
+<?php if ($perfil === 'admin'): ?>
+<a class="btn btn-primary mt-auto"
 href="index.php?bb=residentes_novo">
 Novo Residente
 </a>
@@ -34,31 +31,26 @@ Novo Residente
 </div>
 </div>
 
-<!-- TRABALHADORES CARD -->
+<!-- TRABALHADORES (ADMIN ONLY) -->
+<?php if ($perfil === 'admin'): ?>
 <div class="col-md-6 grid-margin stretch-card">
-<div class="card">
-<div class="card-body">
+<div class="card h-100 border-info">
+<div class="card-body d-flex flex-column">
+<h4 class="card-title text-info">Trabalhadores</h4>
 
-<h4 class="card-title">Trabalhadores</h4>
-<p class="card-description">
-Consultar os trabalhadores do sistema.
-</p>
-
-<a class="btn btn-primary"
+<a class="btn btn-outline-info mb-2"
 href="index.php?bb=trabalhadores_listar">
 Ver Trabalhadores
 </a>
 
-<?php if (is_admin()): ?>
-<a class="btn btn-success ml-2"
+<a class="btn btn-info mt-auto"
 href="index.php?bb=trabalhadores_novo">
 Novo Trabalhador
 </a>
+
+</div>
+</div>
+</div>
 <?php endif; ?>
 
 </div>
-</div>
-</div>
-
-</div>
-

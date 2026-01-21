@@ -1,98 +1,178 @@
 <?php
+require __DIR__ . "/../config.php";
 require __DIR__ . "/../includes/auth.php";
+require __DIR__ . "/../includes/permissions.php";
 
-if ($_SESSION['user']['perfil'] !== 'admin') {
+/* =========================
+ *   ADMIN ONLY
+ * ========================= */
+if (!is_admin()) {
     die("Acesso negado.");
 }
 
-
-require __DIR__ . "/../config.php";
-require __DIR__ . "/../includes/auth.php";
+$erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $nome = $_POST['nome'] ?? '';
-    $sexo = $_POST['sexo'] ?? '';
-    $localizacao = $_POST['localizacao'] ?? null;
-    $estado_civil = $_POST['estado_civil'] ?? 'Solteiro';
-    $numero = $_POST['numero'] ?? null;
-    $endereco = $_POST['endereco'] ?? null;
+    $numero_trabalhador = trim($_POST['numero_trabalhador']);
+    $nome               = trim($_POST['nome']);
+    $telefone           = trim($_POST['telefone']);
+    $residencia         = trim($_POST['residencia']);
+    $estado_civil       = $_POST['estado_civil'];
+    $genero             = $_POST['genero'];
+    $data_nascimento    = $_POST['data_nascimento'] ?: null;
+    $data_admissao      = $_POST['data_admissao'] ?: null;
+    $data_demissao      = $_POST['data_demissao'] ?: null;
+    $naturalidade       = trim($_POST['naturalidade']);
 
-    // FOTO
+    /* =========================
+     *   FOTO UPLOAD
+     * ========================= */
     $foto = null;
-
     if (!empty($_FILES['foto']['name'])) {
-
-        $pasta = "uploads/trabalhadores/";
-
-        if (!is_dir($pasta)) {
-            mkdir($pasta, 0777, true);
+        $dir = "uploads/trabalhadores/";
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
         }
 
-        $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
-        $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
+        $ext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
+        $filename = uniqid("trab_") . "." . strtolower($ext);
+        $foto = $dir . $filename;
 
-        if (in_array($ext, $permitidas)) {
-
-            $nomeFoto = uniqid() . "." . $ext;
-            move_uploaded_file(
-                $_FILES['foto']['tmp_name'],
-                $pasta . $nomeFoto
-            );
-
-            $foto = $pasta . $nomeFoto;
-        }
+        move_uploaded_file($_FILES['foto']['tmp_name'], $foto);
     }
 
-    $stmt = mysqli_prepare(
-        $conexao,
-        "INSERT INTO trabalhadores
-        (nome, foto, sexo, localizacao, estado_civil, numero, endereco)
-    VALUES (?, ?, ?, ?, ?, ?, ?)"
-    );
+    /* =========================
+     *   VALIDATION
+     * ========================= */
+    if ($numero_trabalhador === '' || $nome === '') {
+        $erro = "Número do trabalhador e Nome são obrigatórios.";
+    } else {
 
-    mysqli_stmt_bind_param(
-        $stmt,
-        "sssssss",
-        $nome,
-        $foto,
-        $sexo,
-        $localizacao,
-        $estado_civil,
-        $numero,
-        $endereco
-    );
+        $stmt = mysqli_prepare($conexao, "
+        INSERT INTO trabalhadores
+        (
+            numero_trabalhador,
+            nome,
+            telefone,
+            residencia,
+            estado_civil,
+            genero,
+            data_nascimento,
+            data_admissao,
+            data_demissao,
+            naturalidade,
+            foto
+        )
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        ");
 
-    mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_param(
+            $stmt,
+            "sssssssssss",
+            $numero_trabalhador,
+            $nome,
+            $telefone,
+            $residencia,
+            $estado_civil,
+            $genero,
+            $data_nascimento,
+            $data_admissao,
+            $data_demissao,
+            $naturalidade,
+            $foto
+        );
 
-    header("Location: index.php?bb=trabalhadores_listar");
-    exit;
+        if (mysqli_stmt_execute($stmt)) {
+            header("Location: index.php?bb=trabalhadores_listar");
+            exit;
+        } else {
+            $erro = "Erro ao criar trabalhador.";
+        }
+    }
 }
 ?>
 
 <h3>Novo Trabalhador</h3>
 
+<?php if ($erro): ?>
+<div class="alert alert-danger"><?= htmlspecialchars($erro) ?></div>
+<?php endif; ?>
+
 <form method="post" enctype="multipart/form-data">
 
-<div class="form-group">
-<label>Nome</label>
+<div class="row">
+
+<div class="col-md-4 mb-3">
+<label>Nº Trabalhador *</label>
+<input type="text" name="numero_trabalhador" class="form-control" required>
+</div>
+
+<div class="col-md-8 mb-3">
+<label>Nome *</label>
 <input type="text" name="nome" class="form-control" required>
 </div>
 
-<div class="form-group">
-<label>Foto</label>
-<input type="file" name="foto" class="form-control">
+<div class="col-md-4 mb-3">
+<label>Telefone</label>
+<input type="text" name="telefone" class="form-control">
 </div>
 
-<div class="form-group">
-<label>Sexo</label>
-<select name="sexo" class="form-control" required>
+<div class="col-md-8 mb-3">
+<label>Residência</label>
+<input type="text" name="residencia" class="form-control">
+</div>
+
+<div class="col-md-4 mb-3">
+<label>Estado Civil</label>
+<select name="estado_civil" class="form-control">
+<option value="Solteiro">Solteiro</option>
+<option value="Casado">Casado</option>
+<option value="Divorciado">Divorciado</option>
+<option value="Viúvo">Viúvo</option>
+</select>
+</div>
+
+<div class="col-md-4 mb-3">
+<label>Género</label>
+<select name="genero" class="form-control">
 <option value="Masculino">Masculino</option>
 <option value="Feminino">Feminino</option>
 <option value="Outro">Outro</option>
 </select>
 </div>
 
+<div class="col-md-4 mb-3">
+<label>Naturalidade</label>
+<input type="text" name="naturalidade" class="form-control">
+</div>
+
+<div class="col-md-4 mb-3">
+<label>Data de Nascimento</label>
+<input type="date" name="data_nascimento" class="form-control">
+</div>
+
+<div class="col-md-4 mb-3">
+<label>Data de Admissão</label>
+<input type="date" name="data_admissao" class="form-control">
+</div>
+
+<div class="col-md-4 mb-3">
+<label>Data de Demissão</label>
+<input type="date" name="data_demissao" class="form-control">
+</div>
+
+<div class="col-md-6 mb-3">
+<label>Foto</label>
+<input type="file" name="foto" class="form-control" accept="image/*">
+</div>
+
+</div>
+
 <button class="btn btn-success">Guardar</button>
+<a href="index.php?bb=trabalhadores_listar" class="btn btn-secondary">
+Cancelar
+</a>
 
 </form>
+

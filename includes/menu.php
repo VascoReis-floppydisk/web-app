@@ -1,12 +1,15 @@
 <?php
-$bb = $_GET['bb'] ?? 'home';
+$rota = $_GET['bb'] ?? 'home';
+$userPerfil = $_SESSION['user']['perfil'] ?? 'user';
 
-function active($route, $current) {
-  return $route === $current ? 'active' : '';
+function active($r) {
+  global $rota;
+  return $rota === $r ? 'active' : '';
 }
 
-function active_group($prefix, $current) {
-  return str_starts_with($current, $prefix) ? 'active' : '';
+function isAdmin() {
+  global $userPerfil;
+  return $userPerfil === 'admin';
 }
 ?>
 
@@ -14,29 +17,36 @@ function active_group($prefix, $current) {
 <ul class="nav">
 
 <!-- DASHBOARD -->
-<li class="nav-item">
-<a class="nav-link <?= active('home', $bb) ?>"
-href="index.php?bb=home">
+<li class="nav-item <?= active('home') ?>">
+<a class="nav-link" href="index.php?bb=home">
 <i class="typcn typcn-home-outline menu-icon"></i>
 <span class="menu-title">Dashboard</span>
 </a>
 </li>
 
-<!-- RESIDENTES -->
-<li class="nav-item">
-<a class="nav-link <?= active_group('residentes', $bb) ?>"
-href="index.php?bb=residentes_listar">
+<!-- RESIDENTES (ALL USERS) -->
+<li class="nav-item <?= strpos($rota, 'residentes') === 0 ? 'active' : '' ?>">
+<a class="nav-link" href="index.php?bb=residentes_listar">
 <i class="typcn typcn-group-outline menu-icon"></i>
 <span class="menu-title">Residentes</span>
 </a>
 </li>
 
-<!-- TRABALHADORES -->
-<li class="nav-item">
-<a class="nav-link <?= active_group('trabalhadores', $bb) ?>"
-href="index.php?bb=trabalhadores_listar">
-<i class="typcn typcn-user menu-icon"></i>
+<!-- TRABALHADORES (ADMIN ONLY) -->
+<?php if (isAdmin()): ?>
+<li class="nav-item <?= strpos($rota, 'trabalhadores') === 0 ? 'active' : '' ?>">
+<a class="nav-link" href="index.php?bb=trabalhadores_listar">
+<i class="typcn typcn-user-outline menu-icon"></i>
 <span class="menu-title">Trabalhadores</span>
+</a>
+</li>
+<?php endif; ?>
+
+<!-- LOGOUT -->
+<li class="nav-item">
+<a class="nav-link" href="logout.php">
+<i class="typcn typcn-power-outline menu-icon"></i>
+<span class="menu-title">Sair</span>
 </a>
 </li>
 
