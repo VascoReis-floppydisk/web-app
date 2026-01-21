@@ -1,59 +1,73 @@
 <?php
 require __DIR__ . "/../config.php";
 require __DIR__ . "/../includes/auth.php";
+require __DIR__ . "/../includes/permissions.php";
 
-$result = mysqli_query(
-    $conexao,
-    "SELECT * FROM trabalhadores ORDER BY id DESC"
-);
+/* =========================
+ *   QUERY
+ * ========================= */
+$sql = "SELECT id, nome, sexo, localizacao, numero FROM trabalhadores ORDER BY nome";
+$result = mysqli_query($conexao, $sql);
 ?>
 
 <h3>Trabalhadores</h3>
 
-<a href="index.php?bb=trabalhadores_novo" class="btn btn-primary mb-3">
-Novo Trabalhador
+<!-- ADD BUTTON (ADMIN ONLY) -->
+<?php if (is_admin()): ?>
+<div class="mb-3">
+<a href="index.php?bb=trabalhadores_novo" class="btn btn-success">
++ Novo Trabalhador
 </a>
+</div>
+<?php endif; ?>
 
-<table class="table table-bordered">
+<!-- TABLE -->
+<div class="table-responsive">
+<table class="table table-bordered table-striped">
+<thead>
 <tr>
-<th>Foto</th>
 <th>Nome</th>
 <th>Sexo</th>
+<th>Localização</th>
+<th>Telefone</th>
+<?php if (is_admin()): ?>
 <th>Ações</th>
+<?php endif; ?>
 </tr>
+</thead>
 
-<?php while ($row = mysqli_fetch_assoc($result)) { ?>
-    <tr>
+<tbody>
+<?php if (mysqli_num_rows($result) === 0): ?>
+<tr>
+<td colspan="<?= is_admin() ? 5 : 4 ?>" class="text-center">
+Nenhum trabalhador encontrado.
+</td>
+</tr>
+<?php endif; ?>
 
-    <td>
-    <?php if (!empty($row['foto'])) { ?>
-        <img src="<?= htmlspecialchars($row['foto']) ?>"
-        width="60" height="60"
-        style="border-radius:50%; object-fit:cover;">
-        <?php } else { ?>
-            <img src="images/avatar-default.png"
-            width="60" height="60"
-            style="border-radius:50%; object-fit:cover;">
-            <?php } ?>
-            </td>
+<?php while ($t = mysqli_fetch_assoc($result)): ?>
+<tr>
+<td><?= htmlspecialchars($t['nome']) ?></td>
+<td><?= htmlspecialchars($t['sexo']) ?></td>
+<td><?= htmlspecialchars($t['localizacao']) ?></td>
+<td><?= htmlspecialchars($t['numero']) ?></td>
 
-            <td><?= htmlspecialchars($row['nome']) ?></td>
-            <td><?= htmlspecialchars($row['sexo']) ?></td>
+<?php if (is_admin()): ?>
+<td>
+<a href="index.php?bb=trabalhadores_editar&id=<?= $t['id'] ?>"
+class="btn btn-sm btn-warning">
+Editar
+</a>
 
-            <td>
-            <a class="btn btn-sm btn-warning"
-            href="index.php?bb=trabalhadores_editar&id=<?= $row['id'] ?>">
-            Editar
-            </a>
-
-            <a class="btn btn-sm btn-danger"
-            onclick="return confirm('Apagar trabalhador?')"
-            href="index.php?bb=trabalhadores_excluir&id=<?= $row['id'] ?>">
-            Apagar
-            </a>
-            </td>
-
-            </tr>
-            <?php } ?>
-            </table>
-
+<a href="index.php?bb=trabalhadores_excluir&id=<?= $t['id'] ?>"
+class="btn btn-sm btn-danger"
+onclick="return confirm('Deseja apagar este trabalhador?')">
+Apagar
+</a>
+</td>
+<?php endif; ?>
+</tr>
+<?php endwhile; ?>
+</tbody>
+</table>
+</div>

@@ -1,4 +1,10 @@
 <?php
+require __DIR__ . "/../includes/auth.php";
+
+if ($_SESSION['user']['perfil'] !== 'admin') {
+    die("Acesso negado.");
+}
+
 require __DIR__ . "/../config.php";
 require __DIR__ . "/../includes/auth.php";
 

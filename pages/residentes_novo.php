@@ -1,4 +1,10 @@
 <?php
+require __DIR__ . "/../includes/auth.php";
+
+if ($_SESSION['user']['perfil'] !== 'admin') {
+    die("Acesso negado.");
+}
+
 $erro = '';
 $nome = '';
 $email = '';
