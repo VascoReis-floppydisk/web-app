@@ -9207,7 +9207,7 @@ pre code {
   margin-left: auto;
 }
 
-@media (min-width: 576px) {
+@media (min-width: 180px) {
   .container {
     max-width: 540px;
   }
@@ -25261,6 +25261,16 @@ body.avgrund-active {
   font-size: 1.5rem;
   margin-right: .5rem;
   color: #9a9ea2;
+}
+
+/* =========================================
+ *  FIX BLURRY LOGIN PAGE (CELestialUI)
+ *  ========================================= */
+
+/* Keep logo crisp */
+.full-page-wrapper .brand-logo img {
+  max-width: 180px;
+  height: auto;
 }
 
 /*# sourceMappingURL=../maps/vertical-layout-light/style.css.map */
