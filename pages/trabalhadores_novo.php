@@ -26,32 +26,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $naturalidade       = trim($_POST['naturalidade']);
 
     /* =========================
-     *   FOTO UPLOAD
-     * ========================= */
+     *       FOTO UPLOAD (FIXED)
+     *    ========================= */
     $foto = null;
-    if (!empty($_FILES['foto']['name'])) {
-        $dir = "uploads/trabalhadores/";
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+
+    if (isset($_FILES['foto']) && $_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+
+        if ($_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
+            $erro = "Erro no upload da imagem.";
+        } else {
+
+            $uploadDir = __DIR__ . "/../uploads/trabalhadores/";
+
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+            $permitidas = ['jpg','jpeg','png','webp'];
+
+            if (!in_array($ext, $permitidas)) {
+                $erro = "Formato inválido. Use JPG, PNG ou WEBP.";
+            } else {
+
+                $novoNome = uniqid("trab_", true) . "." . $ext;
+                $destino = $uploadDir . $novoNome;
+
+                if (move_uploaded_file($_FILES['foto']['tmp_name'], $destino)) {
+                    // Path saved to DB (used by cards & PDF)
+                    $foto = "uploads/trabalhadores/" . $novoNome;
+                } else {
+                    $erro = "Falha ao guardar a imagem no servidor.";
+                }
+            }
         }
-
-        $ext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
-        $filename = uniqid("trab_") . "." . strtolower($ext);
-        $foto = $dir . $filename;
-
-        move_uploaded_file($_FILES['foto']['tmp_name'], $foto);
     }
 
     /* =========================
-     *   VALIDATION
-     * ========================= */
+     *       VALIDATION
+     *    ========================= */
     if ($numero_trabalhador === '' || $nome === '') {
         $erro = "Número do trabalhador e Nome são obrigatórios.";
-    } else {
+    }
+
+    /* =========================
+     *       INSERT
+     *    ========================= */
+    if ($erro === '') {
 
         $stmt = mysqli_prepare($conexao, "
-        INSERT INTO trabalhadores
-        (
+        INSERT INTO trabalhadores (
             numero_trabalhador,
             nome,
             telefone,
@@ -87,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: index.php?bb=trabalhadores_listar");
             exit;
         } else {
-            $erro = "Erro ao criar trabalhador.";
+            $erro = "Erro ao criar trabalhador: " . mysqli_error($conexao);
         }
     }
 }
@@ -170,9 +194,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <button class="btn btn-success">Guardar</button>
-<a href="index.php?bb=trabalhadores_listar" class="btn btn-secondary">
-Cancelar
-</a>
+<a href="index.php?bb=trabalhadores_listar" class="btn btn-secondary">Cancelar</a>
 
 </form>
-
