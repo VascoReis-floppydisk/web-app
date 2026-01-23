@@ -1,39 +1,47 @@
 <?php
-if ($_SESSION['user']['perfil'] !== 'admin') {
-    die("Acesso negado.");
-}
 require __DIR__ . "/../config.php";
 require __DIR__ . "/../includes/auth.php";
-require __DIR__ . "/../includes/permissions.php";
 
 /* =========================
- *   QUERY
- * ========================= */
+ *   SESSION & PERMISSIONS
+ *   ========================= */
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$isAdmin = (($_SESSION['user']['perfil'] ?? '') === 'admin');
+
+/* =========================
+ *   QUERY (ALIGNED WITH DB)
+ *   ========================= */
 $sql = "
 SELECT
 id,
-foto,
-numero_trabalhador,
 nome,
+numero_trabalhador,
 telefone,
 residencia,
 estado_civil,
 genero,
-DATE_FORMAT(data_nascimento,'%d/%m/%Y') AS nascimento,
-DATE_FORMAT(data_admissao,'%d/%m/%Y') AS admissao,
-DATE_FORMAT(data_demissao,'%d/%m/%Y') AS demissao,
-naturalidade
+data_nascimento,
+data_admissao AS admissao,
+data_demissao AS demissao,
+naturalidade,
+foto
 FROM trabalhadores
 ORDER BY nome
 ";
 
 $result = mysqli_query($conexao, $sql);
+if (!$result) {
+    die('Erro SQL: ' . mysqli_error($conexao));
+}
 ?>
 
-<h3>Trabalhadores</h3>
+<h3 class="mb-4">Trabalhadores</h3>
 
 <!-- ADD BUTTON (ADMIN ONLY) -->
-<?php if (is_admin()): ?>
+<?php if ($isAdmin): ?>
 <div class="mb-3">
 <a href="index.php?bb=trabalhadores_novo" class="btn btn-success">
 + Novo Trabalhador
@@ -41,32 +49,28 @@ $result = mysqli_query($conexao, $sql);
 </div>
 <?php endif; ?>
 
-<!-- TABLE -->
 <div class="table-responsive">
 <table class="table table-bordered table-striped align-middle">
-<thead>
+<thead class="table-light">
 <tr>
 <th>Foto</th>
-<th>Nº</th>
 <th>Nome</th>
+<th>Nº</th>
 <th>Telefone</th>
 <th>Residência</th>
 <th>Estado Civil</th>
 <th>Género</th>
-<th>Nascimento</th>
+<th>Naturalidade</th>
 <th>Admissão</th>
 <th>Demissão</th>
-<th>Naturalidade</th>
-<?php if (is_admin()): ?>
 <th>Ações</th>
-<?php endif; ?>
 </tr>
 </thead>
 
 <tbody>
 <?php if (mysqli_num_rows($result) === 0): ?>
 <tr>
-<td colspan="<?= is_admin() ? 12 : 11 ?>" class="text-center">
+<td colspan="11" class="text-center">
 Nenhum trabalhador encontrado.
 </td>
 </tr>
@@ -76,48 +80,63 @@ Nenhum trabalhador encontrado.
 <tr>
 
 <!-- FOTO -->
-<td class="text-center">
-<?php if (!empty($t['foto']) && file_exists($t['foto'])): ?>
-<img src="<?= htmlspecialchars($t['foto']) ?>"
-alt="Foto"
-style="width:50px;height:50px;object-fit:cover;border-radius:50%;">
-<?php else: ?>
-<img src="images/avatar.png"
-alt="Sem foto"
-style="width:50px;height:50px;object-fit:cover;border-radius:50%;">
-<?php endif; ?>
-</td>
+<td style="width:90px">
+<?php
+$foto = $t['foto'] ?? '';
+if ($foto !== '' && file_exists($foto)):
+    ?>
+    <img src="<?= htmlspecialchars($foto) ?>"
+    alt="Foto"
+    style="width:70px;height:90px;object-fit:cover;border-radius:4px">
+    <?php else: ?>
+    <span class="text-muted">—</span>
+    <?php endif; ?>
+    </td>
 
-<td><?= htmlspecialchars($t['numero_trabalhador']) ?></td>
-<td><?= htmlspecialchars($t['nome']) ?></td>
-<td><?= htmlspecialchars($t['telefone']) ?></td>
-<td><?= htmlspecialchars($t['residencia']) ?></td>
-<td><?= htmlspecialchars($t['estado_civil']) ?></td>
-<td><?= htmlspecialchars($t['genero']) ?></td>
-<td><?= $t['nascimento'] ?: '-' ?></td>
-<td><?= $t['admissao'] ?: '-' ?></td>
-<td><?= $t['demissao'] ?: '-' ?></td>
-<td><?= htmlspecialchars($t['naturalidade']) ?></td>
+    <!-- INFO -->
+    <td><?= htmlspecialchars($t['nome']) ?></td>
+    <td><?= htmlspecialchars($t['numero_trabalhador']) ?></td>
+    <td><?= htmlspecialchars($t['telefone']) ?></td>
+    <td><?= htmlspecialchars($t['residencia']) ?></td>
+    <td><?= htmlspecialchars($t['estado_civil']) ?></td>
+    <td><?= htmlspecialchars($t['genero']) ?></td>
+    <td><?= htmlspecialchars($t['naturalidade']) ?></td>
+    <td><?= htmlspecialchars($t['admissao'] ?? '-') ?></td>
+    <td><?= htmlspecialchars($t['demissao'] ?? '-') ?></td>
 
-<?php if (is_admin()): ?>
-<td>
-<a href="index.php?bb=trabalhadores_editar&id=<?= $t['id'] ?>"
-class="btn btn-sm btn-warning">
-Editar
-</a>
+    <!-- ACTIONS -->
+    <td style="white-space:nowrap">
 
-<a href="index.php?bb=trabalhadores_excluir&id=<?= $t['id'] ?>"
-class="btn btn-sm btn-danger"
-onclick="return confirm('Deseja apagar este trabalhador?')">
-Apagar
-</a>
-</td>
-<?php endif; ?>
+    <!-- PDF CARD (ADMIN ONLY) -->
+    <?php if ($isAdmin): ?>
+    <a href="trabalhadores_card.php?id=<?= $t['id'] ?>"
+    class="btn btn-sm btn-info mb-1">
+    Cartão PDF
+    </a>
+    <?php endif; ?>
 
-</tr>
-<?php endwhile; ?>
-</tbody>
-</table>
-</div>
+    <!-- EDIT / DELETE (ADMIN ONLY) -->
+    <?php if ($isAdmin): ?>
+    <a href="index.php?bb=trabalhadores_editar&id=<?= $t['id'] ?>"
+    class="btn btn-sm btn-warning mb-1">
+    Editar
+    </a>
+
+    <a href="index.php?bb=trabalhadores_excluir&id=<?= $t['id'] ?>"
+    class="btn btn-sm btn-danger mb-1"
+    onclick="return confirm('Deseja apagar este trabalhador?')">
+    Apagar
+    </a>
+    <?php else: ?>
+    <span class="text-muted">—</span>
+    <?php endif; ?>
+
+    </td>
+    </tr>
+    <?php endwhile; ?>
+    </tbody>
+    </table>
+    </div>
+
 
 
