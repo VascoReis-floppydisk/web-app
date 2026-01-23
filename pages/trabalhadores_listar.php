@@ -1,33 +1,30 @@
 <?php
-require __DIR__ . "/../config.php";
-require __DIR__ . "/../includes/auth.php";
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-/* =========================
- *   SESSION & PERMISSIONS
- *   ========================= */
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/auth.php';
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $isAdmin = (($_SESSION['user']['perfil'] ?? '') === 'admin');
 
-/* =========================
- *   QUERY (ALIGNED WITH DB)
- *   ========================= */
+/* QUERY */
 $sql = "
 SELECT
-id,
-nome,
-numero_trabalhador,
-telefone,
-residencia,
-estado_civil,
-genero,
-data_nascimento,
-data_admissao AS admissao,
-data_demissao AS demissao,
-naturalidade,
-foto
+    id,
+    nome,
+    numero_trabalhador,
+    telefone,
+    residencia,
+    estado_civil,
+    genero,
+    data_admissao AS admissao,
+    data_demissao AS demissao,
+    naturalidade,
+    foto
 FROM trabalhadores
 ORDER BY nome
 ";
@@ -40,103 +37,89 @@ if (!$result) {
 
 <h3 class="mb-4">Trabalhadores</h3>
 
-<!-- ADD BUTTON (ADMIN ONLY) -->
+<!-- ADD BUTTON -->
 <?php if ($isAdmin): ?>
 <div class="mb-3">
-<a href="index.php?bb=trabalhadores_novo" class="btn btn-success">
-+ Novo Trabalhador
-</a>
+    <a href="index.php?bb=trabalhadores_novo" class="btn btn-success">
+        + Novo Trabalhador
+    </a>
 </div>
 <?php endif; ?>
 
-<div class="table-responsive">
-<table class="table table-bordered table-striped align-middle">
-<thead class="table-light">
-<tr>
-<th>Foto</th>
-<th>Nome</th>
-<th>Nº</th>
-<th>Telefone</th>
-<th>Residência</th>
-<th>Estado Civil</th>
-<th>Género</th>
-<th>Naturalidade</th>
-<th>Admissão</th>
-<th>Demissão</th>
-<th>Ações</th>
-</tr>
-</thead>
+<div class="row g-3">
 
-<tbody>
 <?php if (mysqli_num_rows($result) === 0): ?>
-<tr>
-<td colspan="11" class="text-center">
-Nenhum trabalhador encontrado.
-</td>
-</tr>
+    <div class="col-12 text-center text-muted">
+        Nenhum trabalhador encontrado.
+    </div>
 <?php endif; ?>
 
 <?php while ($t = mysqli_fetch_assoc($result)): ?>
-<tr>
+<div class="col-12 col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm">
 
-<!-- FOTO -->
-<td style="width:90px">
-<?php
-$foto = $t['foto'] ?? '';
-if ($foto !== '' && file_exists($foto)):
-    ?>
-    <img src="<?= htmlspecialchars($foto) ?>"
-    alt="Foto"
-    style="width:70px;height:90px;object-fit:cover;border-radius:4px">
-    <?php else: ?>
-    <span class="text-muted">—</span>
-    <?php endif; ?>
-    </td>
+        <!-- FOTO -->
+        <?php
+        $foto = $t['foto'] ?? '';
+        if ($foto && file_exists($foto)):
+        ?>
+            <img src="<?= htmlspecialchars($foto) ?>"
+                 class="card-img-top"
+                 style="height:260px;object-fit:cover">
+        <?php else: ?>
+            <div class="d-flex align-items-center justify-content-center bg-light text-muted"
+                 style="height:260px">
+                Sem foto
+            </div>
+        <?php endif; ?>
 
-    <!-- INFO -->
-    <td><?= htmlspecialchars($t['nome']) ?></td>
-    <td><?= htmlspecialchars($t['numero_trabalhador']) ?></td>
-    <td><?= htmlspecialchars($t['telefone']) ?></td>
-    <td><?= htmlspecialchars($t['residencia']) ?></td>
-    <td><?= htmlspecialchars($t['estado_civil']) ?></td>
-    <td><?= htmlspecialchars($t['genero']) ?></td>
-    <td><?= htmlspecialchars($t['naturalidade']) ?></td>
-    <td><?= htmlspecialchars($t['admissao'] ?? '-') ?></td>
-    <td><?= htmlspecialchars($t['demissao'] ?? '-') ?></td>
+        <!-- BODY -->
+        <div class="card-body">
+            <h5 class="card-title mb-2">
+                <?= htmlspecialchars($t['nome']) ?>
+            </h5>
 
-    <!-- ACTIONS -->
-    <td style="white-space:nowrap">
+            <p class="mb-1"><strong>Nº:</strong> <?= htmlspecialchars($t['numero_trabalhador']) ?></p>
+            <p class="mb-1"><strong>Telefone:</strong> <?= htmlspecialchars($t['telefone']) ?></p>
+            <p class="mb-1"><strong>Residência:</strong> <?= htmlspecialchars($t['residencia']) ?></p>
+            <p class="mb-1"><strong>Estado Civil:</strong> <?= htmlspecialchars($t['estado_civil']) ?></p>
+            <p class="mb-1"><strong>Género:</strong> <?= htmlspecialchars($t['genero']) ?></p>
+            <p class="mb-1"><strong>Naturalidade:</strong> <?= htmlspecialchars($t['naturalidade']) ?></p>
+            <p class="mb-1"><strong>Admissão:</strong> <?= htmlspecialchars($t['admissao'] ?? '-') ?></p>
+            <p><strong>Demissão:</strong> <?= htmlspecialchars($t['demissao'] ?? '-') ?></p>
+        </div>
 
-    <!-- PDF CARD (ADMIN ONLY) -->
-    <?php if ($isAdmin): ?>
-    <a href="trabalhadores_card.php?id=<?= $t['id'] ?>"
-    class="btn btn-sm btn-info mb-1">
-    Cartão PDF
-    </a>
-    <?php endif; ?>
+        <!-- ACTIONS -->
+        <div class="card-footer bg-white">
+            <?php if ($isAdmin): ?>
 
-    <!-- EDIT / DELETE (ADMIN ONLY) -->
-    <?php if ($isAdmin): ?>
-    <a href="index.php?bb=trabalhadores_editar&id=<?= $t['id'] ?>"
-    class="btn btn-sm btn-warning mb-1">
-    Editar
-    </a>
+                <a href="trabalhadores_card.php?id=<?= $t['id'] ?>"
+                   class="btn btn-sm btn-info w-100 mb-1">
+                    Cartão PDF
+                </a>
 
-    <a href="index.php?bb=trabalhadores_excluir&id=<?= $t['id'] ?>"
-    class="btn btn-sm btn-danger mb-1"
-    onclick="return confirm('Deseja apagar este trabalhador?')">
-    Apagar
-    </a>
-    <?php else: ?>
-    <span class="text-muted">—</span>
-    <?php endif; ?>
+                <a href="index.php?bb=trabalhadores_editar&id=<?= $t['id'] ?>"
+                   class="btn btn-sm btn-warning w-100 mb-1">
+                    Editar
+                </a>
 
-    </td>
-    </tr>
-    <?php endwhile; ?>
-    </tbody>
-    </table>
+                <a href="index.php?bb=trabalhadores_excluir&id=<?= $t['id'] ?>"
+                   class="btn btn-sm btn-danger w-100"
+                   onclick="return confirm('Deseja apagar este trabalhador?')">
+                    Apagar
+                </a>
+
+            <?php else: ?>
+                <span class="text-muted">Sem permissões</span>
+            <?php endif; ?>
+        </div>
+
     </div>
+</div>
+<?php endwhile; ?>
+
+</div>
+
 
 
 
