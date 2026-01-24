@@ -73,6 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      *       INSERT
      *    ========================= */
     if ($erro === '') {
+        
+        mysqli_query($conexao, "SET SESSION sql_mode = 'NO_ENGINE_SUBSTITUTION'");
 
         $stmt = mysqli_prepare($conexao, "
         INSERT INTO trabalhadores (

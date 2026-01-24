@@ -40,12 +40,24 @@ switch ($bb) {
                 include __DIR__ . "/pages/trabalhadores_listar.php";
                 break;
 
+                case 'trabalhadores_documentos':
+            include __DIR__ . "/pages/trabalhadores_documentos.php";
+            break;
+
+                case 'documento_upload':
+            include __DIR__ . "/pages/documento_upload.php";
+            break;
+
+
             case 'trabalhadores_novo':
                 include __DIR__ . "/pages/trabalhadores_novo.php";
                 break;
 
             case 'trabalhadores_editar':
                 include __DIR__ . "/pages/trabalhadores_editar.php";
+                break;
+            case 'doc_contratos':
+                include __DIR__ . '/pages/doc_contratos.php';
                 break;
 
             case 'trabalhadores_excluir':

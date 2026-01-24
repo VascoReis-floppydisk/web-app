@@ -9,3 +9,4 @@ function require_admin() {
         die("Acesso negado.");
     }
 }
+?>

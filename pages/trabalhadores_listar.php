@@ -91,6 +91,14 @@ class="btn btn-sm btn-info w-100 mb-1">
 Cartão PDF
 </a>
 
+<a href="index.php?bb=trabalhadores_documentos&id=<?= $t['id'] ?>"
+class="btn btn-sm btn-secondary w-100 mb-1">
+Documentos
+</a>
+
+
+
+
 <a href="index.php?bb=trabalhadores_editar&id=<?= $t['id'] ?>"
 class="btn btn-sm btn-warning w-100 mb-1">
 Editar
