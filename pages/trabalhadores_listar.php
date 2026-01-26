@@ -13,7 +13,7 @@ numero_trabalhador,
 telefone,
 residencia,
 estado_civil,
-genero,
+sexo,
 data_admissao AS admissao,
 data_demissao AS demissao,
 naturalidade,
@@ -27,6 +27,8 @@ $result = mysqli_query($conexao, $sql);
 if (!$result) {
     die("Erro SQL: " . mysqli_error($conexao));
 }
+
+function e($v) { return htmlspecialchars($v ?? ''); }
 ?>
 
 <h3 class="mb-4">Trabalhadores</h3>
@@ -58,7 +60,7 @@ $fotoPath = __DIR__ . "/../" . $foto;
 
 <!-- FOTO -->
 <?php if ($foto && file_exists($fotoPath)): ?>
-<img src="<?= htmlspecialchars($foto) ?>"
+<img src="<?= e($foto) ?>"
 class="card-img-top"
 style="height:260px; object-fit:cover;">
 <?php else: ?>
@@ -70,16 +72,16 @@ Sem foto
 
 <!-- BODY -->
 <div class="card-body">
-<h5 class="card-title mb-2"><?= htmlspecialchars($t['nome']) ?></h5>
+<h5 class="card-title mb-2"><?= e($t['nome']) ?></h5>
 
-<p class="mb-1"><strong>Nº:</strong> <?= htmlspecialchars($t['numero_trabalhador']) ?></p>
-<p class="mb-1"><strong>Telefone:</strong> <?= htmlspecialchars($t['telefone']) ?></p>
-<p class="mb-1 text-truncate"><strong>Residência:</strong> <?= htmlspecialchars($t['residencia']) ?></p>
-<p class="mb-1"><strong>Estado Civil:</strong> <?= htmlspecialchars($t['estado_civil']) ?></p>
-<p class="mb-1"><strong>Género:</strong> <?= htmlspecialchars($t['genero']) ?></p>
-<p class="mb-1 text-truncate"><strong>Naturalidade:</strong> <?= htmlspecialchars($t['naturalidade']) ?></p>
-<p class="mb-1"><strong>Admissão:</strong> <?= htmlspecialchars($t['admissao'] ?? '-') ?></p>
-<p class="mb-0"><strong>Demissão:</strong> <?= htmlspecialchars($t['demissao'] ?? '-') ?></p>
+<p class="mb-1"><strong>Nº:</strong> <?= e($t['numero_trabalhador']) ?></p>
+<p class="mb-1"><strong>Telefone:</strong> <?= e($t['telefone']) ?></p>
+<p class="mb-1 text-truncate"><strong>Residência:</strong> <?= e($t['residencia']) ?></p>
+<p class="mb-1"><strong>Estado Civil:</strong> <?= e($t['estado_civil']) ?></p>
+<p class="mb-1"><strong>Sexo:</strong> <?= e($t['sexo']) ?></p>
+<p class="mb-1 text-truncate"><strong>Naturalidade:</strong> <?= e($t['naturalidade']) ?></p>
+<p class="mb-1"><strong>Admissão:</strong> <?= e($t['admissao'] ?? '-') ?></p>
+<p class="mb-0"><strong>Demissão:</strong> <?= e($t['demissao'] ?? '-') ?></p>
 </div>
 
 <!-- ACTIONS -->
@@ -95,9 +97,6 @@ Cartão PDF
 class="btn btn-sm btn-secondary w-100 mb-1">
 Documentos
 </a>
-
-
-
 
 <a href="index.php?bb=trabalhadores_editar&id=<?= $t['id'] ?>"
 class="btn btn-sm btn-warning w-100 mb-1">
@@ -121,3 +120,4 @@ Apagar
 <?php endwhile; ?>
 
 </div>
+
