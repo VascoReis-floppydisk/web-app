@@ -64,6 +64,10 @@ switch ($bb) {
                 include __DIR__ . "/pages/trabalhadores_excluir.php";
                 break;
 
+                /* ===== EQUIPAS ===== */
+            case 'equipas':
+                include __DIR__ . "/pages/equipas.php";
+                break;
 
             case 'users_listar':
                 include __DIR__ . "/pages/users_listar.php";
@@ -84,6 +88,11 @@ switch ($bb) {
             default:
                 include __DIR__ . "/pages/404.php";
                 break;
+
+            case 'equipa_ver':
+                include __DIR__ . "/pages/equipa_ver.php";
+                break;
+
 }
 ?>
 

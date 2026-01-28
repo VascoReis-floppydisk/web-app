@@ -52,6 +52,13 @@ function isAdmin() {
 </li>
 <?php endif; ?>
 
+<li class="nav-item">
+<a class="nav-link" href="index.php?bb=equipas">
+<i class="mdi mdi-account-group"></i>
+<span class="menu-title">Equipas</span>
+</a>
+</li>
+
 <!-- LOGOUT -->
 <li class="nav-item">
 <a class="nav-link" href="logout.php">
@@ -59,6 +66,7 @@ function isAdmin() {
 <span class="menu-title">Sair</span>
 </a>
 </li>
+
 
 </ul>
 </nav>

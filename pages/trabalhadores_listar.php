@@ -88,7 +88,7 @@ Sem foto
 <div class="card-footer bg-white border-0 pt-0">
 <?php if ($isAdmin): ?>
 
-<a href="trabalhadores_card.php?id=<?= $t['id'] ?>"
+<a href="trabalhadores_card.php?id=<?= $t['id'] ?>" download="cartao_<?= e($t['nome']) ?>.html"
 class="btn btn-sm btn-info w-100 mb-1">
 Cartão PDF
 </a>
@@ -120,4 +120,3 @@ Apagar
 <?php endwhile; ?>
 
 </div>
-

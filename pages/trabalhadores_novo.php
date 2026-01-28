@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $telefone           = trim($_POST['telefone']);
     $residencia         = trim($_POST['residencia']);
     $estado_civil       = $_POST['estado_civil'];
-    $genero             = $_POST['genero'];
+    $sexo             = $_POST['sexo'];
     $data_nascimento    = $_POST['data_nascimento'] ?: null;
     $data_admissao      = $_POST['data_admissao'] ?: null;
     $data_demissao      = $_POST['data_demissao'] ?: null;
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      *       INSERT
      *    ========================= */
     if ($erro === '') {
-        
+
         mysqli_query($conexao, "SET SESSION sql_mode = 'NO_ENGINE_SUBSTITUTION'");
 
         $stmt = mysqli_prepare($conexao, "
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             telefone,
             residencia,
             estado_civil,
-            genero,
+            sexo,
             data_nascimento,
             data_admissao,
             data_demissao,
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $telefone,
             $residencia,
             $estado_civil,
-            $genero,
+            $sexo,
             $data_nascimento,
             $data_admissao,
             $data_demissao,
@@ -161,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="col-md-4 mb-3">
 <label>Género</label>
-<select name="genero" class="form-control">
+<select name="sexo" class="form-control">
 <option value="Masculino">Masculino</option>
 <option value="Feminino">Feminino</option>
 <option value="Outro">Outro</option>

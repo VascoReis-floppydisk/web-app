@@ -1,30 +1,26 @@
 <?php
-// =================================================================
-// PASSO 1: INCLUIR FICHEIROS DE CONFIGURAÇÃO E FUNÇÕES
-// =================================================================
-require __DIR__ . "/config.php";
-require __DIR__ . "/includes/auth.php"; // Para segurança, se necessário
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-// =================================================================
-// PASSO 2: DEFINIR A FUNÇÃO 'e()' QUE ESTÁ A FALTAR
-// =================================================================
-if (!function_exists('e')) {
-    function e($string) {
-        return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
-    }
+require __DIR__ . "/lib/dompdf/autoload.inc.php";
+require __DIR__ . "/config.php";
+require __DIR__ . "/includes/auth.php";
+
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
+/* ================= FUNÇÃO ESCAPE ================= */
+function e($string) {
+    return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-// =================================================================
-// PASSO 3: OBTER E VALIDAR O ID DO TRABALHADOR
-// =================================================================
+/* ================= VALIDAR ID ================= */
 $trabalhador_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$trabalhador_id) {
-    die("ID do trabalhador inválido ou não fornecido.");
+    die("ID inválido.");
 }
 
-// =================================================================
-// PASSO 4: BUSCAR OS DADOS DO TRABALHADOR NA BASE DE DADOS
-// =================================================================
+/* ================= BUSCAR DADOS ================= */
 $stmt = mysqli_prepare($conexao, "SELECT * FROM trabalhadores WHERE id = ?");
 mysqli_stmt_bind_param($stmt, "i", $trabalhador_id);
 mysqli_stmt_execute($stmt);
@@ -35,116 +31,150 @@ if (!$trabalhador) {
     die("Trabalhador não encontrado.");
 }
 
-// =================================================================
-// PASSO 5: CRIAR A VARIÁVEL '$fotoHtml' QUE ESTÁ A FALTAR
-// =================================================================
-$fotoHtml = '<div class="photo-placeholder">Sem foto</div>'; // Valor padrão
-$fotoPath = __DIR__ . "/" . ($trabalhador['foto'] ?? '');
+/* ================= FOTO BASE64 ================= */
+$fotoHtml = '<div style="width:140px;height:140px;background:#eee;text-align:center;line-height:140px;border-radius:10px;">Sem Foto</div>';
 
+$fotoPath = __DIR__ . "/" . ltrim($trabalhador['foto'] ?? '', '/');
 if (!empty($trabalhador['foto']) && file_exists($fotoPath)) {
-    // Converte a imagem para base64 para embutir no HTML/PDF
     $imageData = base64_encode(file_get_contents($fotoPath));
     $imageType = mime_content_type($fotoPath);
-    $fotoHtml = '<img src="data:' . $imageType . ';base64,' . $imageData . '">';
+    $fotoHtml = '<img src="data:' . $imageType . ';base64,' . $imageData . '" style="width:140px;height:140px;object-fit:cover;border-radius:10px;">';
 }
 
-// =================================================================
-// PASSO 6: INCLUIR O HTML DO CARTÃO (O SEU CÓDIGO ORIGINAL)
-// =================================================================
+/* ================= CAPTURAR HTML ================= */
+ob_start();
 ?>
+
 <!DOCTYPE html>
-<html lang="pt">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Cartão do Trabalhador</title>
-    <style>
-        /* Estilos básicos para o cartão. Podem ser melhorados. */
-        body { font-family: sans-serif; margin: 0; }
-        .page { border: 1px solid #ccc; width: 800px; margin: 20px auto; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .header { display: flex; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .header-left { width: 150px; height: 150px; border: 1px solid #eee; }
-        .header-left img { width: 100%; height: 100%; object-fit: cover; }
-        .header-right { flex-grow: 1; padding-left: 20px; }
-        .title { font-size: 24px; font-weight: bold; }
-        .subtitle { font-size: 16px; color: #555; }
-        .section { margin-top: 20px; }
-        .section-title { font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
-        .label { font-size: 12px; color: #777; }
-        .value { font-size: 16px; }
-        .footer { text-align: center; font-size: 12px; color: #999; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; }
-    </style>
+<meta charset="UTF-8">
+<style>
+body { font-family: DejaVu Sans, sans-serif; color:#2c3e50; }
+
+.page {
+    width: 100%;
+    border: 1px solid #ddd;
+}
+
+.header {
+    background: #667eea;
+    color: white;
+    padding: 20px;
+}
+
+.header-table {
+    width: 100%;
+}
+
+.header-title {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.section {
+    padding: 20px;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 5px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+}
+
+.label {
+    font-weight: bold;
+    color: #555;
+    width: 40%;
+}
+
+.footer {
+    font-size: 10px;
+    text-align: center;
+    padding: 10px;
+    background: #f2f2f2;
+    margin-top: 20px;
+}
+</style>
 </head>
 <body>
 
 <div class="page">
 
-    <div class="header">
-        <div class="header-left">
-            <?= $fotoHtml ?>
-        </div>
+<!-- HEADER -->
+<div class="header">
+<table class="header-table">
+<tr>
+<td width="160"><?= $fotoHtml ?></td>
+<td>
+<div class="header-title"><?= e($trabalhador['nome']) ?></div>
+<div>Cartão de Identificação do Trabalhador</div>
+<br>
+<strong>Nº Trabalhador:</strong> <?= e($trabalhador['numero_trabalhador']) ?><br>
+<strong>Admissão:</strong> <?= date('d/m/Y', strtotime($trabalhador['data_admissao'])) ?>
+</td>
+</tr>
+</table>
+</div>
 
-        <div class="header-right">
-            <div class="title">Cartão do Trabalhador</div>
-            <div class="subtitle">Documento interno • Recursos Humanos</div>
-        </div>
-    </div>
+<!-- DADOS PESSOAIS -->
+<div class="section">
+<div class="section-title">Dados Pessoais</div>
+<table class="table">
+<tr><td class="label">Nome</td><td><?= e($trabalhador['nome']) ?></td></tr>
+<tr><td class="label">Sexo</td><td><?= e($trabalhador['sexo'] ?? '-') ?></td></tr>
+<tr><td class="label">Nascimento</td><td><?= !empty($trabalhador['data_nascimento']) ? date('d/m/Y', strtotime($trabalhador['data_nascimento'])) : '-' ?></td></tr>
+<tr><td class="label">Naturalidade</td><td><?= e($trabalhador['naturalidade'] ?? '-') ?></td></tr>
+<tr><td class="label">Estado Civil</td><td><?= e($trabalhador['estado_civil'] ?? '-') ?></td></tr>
+<tr><td class="label">Telefone</td><td><?= e($trabalhador['telefone'] ?? '-') ?></td></tr>
+</table>
+</div>
 
-    <div class="section">
-        <div class="section-title">Dados Pessoais</div>
+<!-- DADOS ADMINISTRATIVOS -->
+<div class="section">
+<div class="section-title">Dados Administrativos</div>
+<table class="table">
+<tr><td class="label">Data de Admissão</td><td><?= date('d/m/Y', strtotime($trabalhador['data_admissao'])) ?></td></tr>
+<tr><td class="label">Data de Demissão</td><td><?= !empty($trabalhador['data_demissao']) ? date('d/m/Y', strtotime($trabalhador['data_demissao'])) : 'Ativo' ?></td></tr>
+<tr><td class="label">Nº Trabalhador</td><td><?= e($trabalhador['numero_trabalhador']) ?></td></tr>
+</table>
+</div>
 
-        <div class="grid">
-            <div class="cell">
-                <div class="label">Nome</div>
-                <div class="value"><?= e($trabalhador['nome']) ?></div>
-            </div>
-            <div class="cell">
-                <div class="label">Estado Civil</div>
-                <div class="value"><?= e($trabalhador['estado_civil']) ?></div>
-            </div>
-            <div class="cell">
-                <div class="label">Nº do Trabalhador</div>
-                <div class="value"><?= e($trabalhador['numero_trabalhador']) ?></div>
-            </div>
-            <div class="cell">
-                <div class="label">Género</div>
-                <div class="value"><?= e($trabalhador['genero']) ?></div>
-            </div>
-            <div class="cell">
-                <div class="label">Telefone</div>
-                <div class="value"><?= e($trabalhador['telefone']) ?></div>
-            </div>
-            <div class="cell">
-                <div class="label">Naturalidade</div>
-                <div class="value"><?= e($trabalhador['naturalidade']) ?></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Dados Administrativos</div>
-
-        <div class="grid">
-            <div class="cell">
-                <div class="label">Data de Nascimento</div>
-                <div class="value"><?= e($trabalhador['data_nascimento']) ?></div>
-            </div>
-            <div class="cell">
-                <div class="label">Data de Admissão</div>
-                <div class="value"><?= e($trabalhador['data_admissao']) ?></div>
-            </div>
-            <div class="cell">
-                <div class="label">Data de Demissão</div>
-                <div class="value"><?= e($trabalhador['data_demissao'] ?: '-') ?></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="footer">
-        Documento gerado em <?= date('d/m/Y') ?>
-    </div>
+<div class="footer">
+Documento Confidencial • Recursos Humanos • Gerado em <?= date('d/m/Y H:i') ?>
+</div>
 
 </div>
 
 </body>
 </html>
+
+<?php
+$html = ob_get_clean();
+
+/* ================= GERAR PDF ================= */
+$options = new Options();
+$options->set('isRemoteEnabled', true);
+
+$dompdf = new Dompdf($options);
+$dompdf->loadHtml($html);
+$dompdf->setPaper('A4', 'portrait');
+$dompdf->render();
+
+/* ================= DOWNLOAD ================= */
+$filename = "cartao_" . preg_replace('/\s+/', '_', $trabalhador['nome']) . ".pdf";
+$dompdf->stream($filename, ["Attachment" => true]);
+exit;
