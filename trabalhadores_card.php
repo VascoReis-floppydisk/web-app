@@ -34,11 +34,20 @@ if (!$trabalhador) {
 /* ================= FOTO BASE64 ================= */
 $fotoHtml = '<div style="width:140px;height:140px;background:#eee;text-align:center;line-height:140px;border-radius:10px;">Sem Foto</div>';
 
-$fotoPath = __DIR__ . "/" . ltrim($trabalhador['foto'] ?? '', '/');
-if (!empty($trabalhador['foto']) && file_exists($fotoPath)) {
-    $imageData = base64_encode(file_get_contents($fotoPath));
-    $imageType = mime_content_type($fotoPath);
-    $fotoHtml = '<img src="data:' . $imageType . ';base64,' . $imageData . '" style="width:140px;height:140px;object-fit:cover;border-radius:10px;">';
+if (!empty($trabalhador['foto'])) {
+    $relativePath = ltrim($trabalhador['foto'], '/');
+    $fotoPath = __DIR__ . '/' . $relativePath;
+
+    if (file_exists($fotoPath)) {
+        $imageData = base64_encode(file_get_contents($fotoPath));
+        $imageType = mime_content_type($fotoPath);
+        $fotoHtml = '<img src="data:' . $imageType . ';base64,' . $imageData . '" style="width:140px;height:140px;object-fit:cover;border-radius:10px;">';
+    }
+}
+
+/* ================= FUNÇÃO DATA SEGURA ================= */
+function data_br($data) {
+    return !empty($data) ? date('d/m/Y', strtotime($data)) : '-';
 }
 
 /* ================= CAPTURAR HTML ================= */
@@ -52,29 +61,15 @@ ob_start();
 <style>
 body { font-family: DejaVu Sans, sans-serif; color:#2c3e50; }
 
-.page {
-    width: 100%;
-    border: 1px solid #ddd;
-}
+.page { width: 100%; border: 1px solid #ddd; }
 
-.header {
-    background: #667eea;
-    color: white;
-    padding: 20px;
-}
+.header { background: #667eea; color: white; padding: 20px; }
 
-.header-table {
-    width: 100%;
-}
+.header-table { width: 100%; }
 
-.header-title {
-    font-size: 22px;
-    font-weight: bold;
-}
+.header-title { font-size: 22px; font-weight: bold; }
 
-.section {
-    padding: 20px;
-}
+.section { padding: 20px; }
 
 .section-title {
     font-size: 16px;
@@ -84,10 +79,7 @@ body { font-family: DejaVu Sans, sans-serif; color:#2c3e50; }
     padding-bottom: 5px;
 }
 
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
+.table { width: 100%; border-collapse: collapse; }
 
 .table td {
     padding: 8px;
@@ -95,11 +87,7 @@ body { font-family: DejaVu Sans, sans-serif; color:#2c3e50; }
     font-size: 12px;
 }
 
-.label {
-    font-weight: bold;
-    color: #555;
-    width: 40%;
-}
+.label { font-weight: bold; color: #555; width: 40%; }
 
 .footer {
     font-size: 10px;
@@ -124,7 +112,7 @@ body { font-family: DejaVu Sans, sans-serif; color:#2c3e50; }
 <div>Cartão de Identificação do Trabalhador</div>
 <br>
 <strong>Nº Trabalhador:</strong> <?= e($trabalhador['numero_trabalhador']) ?><br>
-<strong>Admissão:</strong> <?= date('d/m/Y', strtotime($trabalhador['data_admissao'])) ?>
+<strong>Admissão:</strong> <?= data_br($trabalhador['data_admissao']) ?>
 </td>
 </tr>
 </table>
@@ -136,7 +124,7 @@ body { font-family: DejaVu Sans, sans-serif; color:#2c3e50; }
 <table class="table">
 <tr><td class="label">Nome</td><td><?= e($trabalhador['nome']) ?></td></tr>
 <tr><td class="label">Sexo</td><td><?= e($trabalhador['sexo'] ?? '-') ?></td></tr>
-<tr><td class="label">Nascimento</td><td><?= !empty($trabalhador['data_nascimento']) ? date('d/m/Y', strtotime($trabalhador['data_nascimento'])) : '-' ?></td></tr>
+<tr><td class="label">Nascimento</td><td><?= data_br($trabalhador['data_nascimento'] ?? null) ?></td></tr>
 <tr><td class="label">Naturalidade</td><td><?= e($trabalhador['naturalidade'] ?? '-') ?></td></tr>
 <tr><td class="label">Estado Civil</td><td><?= e($trabalhador['estado_civil'] ?? '-') ?></td></tr>
 <tr><td class="label">Telefone</td><td><?= e($trabalhador['telefone'] ?? '-') ?></td></tr>
@@ -147,8 +135,8 @@ body { font-family: DejaVu Sans, sans-serif; color:#2c3e50; }
 <div class="section">
 <div class="section-title">Dados Administrativos</div>
 <table class="table">
-<tr><td class="label">Data de Admissão</td><td><?= date('d/m/Y', strtotime($trabalhador['data_admissao'])) ?></td></tr>
-<tr><td class="label">Data de Demissão</td><td><?= !empty($trabalhador['data_demissao']) ? date('d/m/Y', strtotime($trabalhador['data_demissao'])) : 'Ativo' ?></td></tr>
+<tr><td class="label">Data de Admissão</td><td><?= data_br($trabalhador['data_admissao']) ?></td></tr>
+<tr><td class="label">Data de Demissão</td><td><?= !empty($trabalhador['data_demissao']) ? data_br($trabalhador['data_demissao']) : 'Ativo' ?></td></tr>
 <tr><td class="label">Nº Trabalhador</td><td><?= e($trabalhador['numero_trabalhador']) ?></td></tr>
 </table>
 </div>
@@ -178,3 +166,4 @@ $dompdf->render();
 $filename = "cartao_" . preg_replace('/\s+/', '_', $trabalhador['nome']) . ".pdf";
 $dompdf->stream($filename, ["Attachment" => true]);
 exit;
+
